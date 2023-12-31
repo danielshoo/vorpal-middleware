@@ -1,0 +1,13 @@
+{
+  "name": "vorpal-middleware",
+  "version": "1.0.0",
+  "description": "A middleware pipeline supporting the Vorpal CLI package",
+  "main": "index.js",
+  "type": "module",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "author": "Daniel Shuster",
+  "license": "MIT"
+}
+

@@ -1,20 +1,54 @@
 # vorpal-middleware
-A basic middleware pipeline supporting the Vorpal CLI package
+A middleware pipeline supporting the Vorpal CLI package
 
+### Problem Statement
 
-## Example Usage:
+Ideally, Vorpal would have a native middleware pipeline (similar to Express) in which each entry could act on and mutate 
+the CLI arguments in a legible and predictable order. Since it does not, at the time of writing, this forces logic into Vorpal-actions 
+promoting code duplication. Consider having multiple Vorpal-commands that require validating a session-token and appending
+user data to the CLI arguments. To that end, an AuthMiddleware could be added to this pipeline.
+
+### Asynchronous Middleware Support
+Asynchronous middlewares are supported. They will also be executed in the order they were added to the pipeline.
+
+### Example Middleware
 
 ```
+// AuthMiddleware.js
+
+import OAuth2 from "#lib/oauth2";
+
+/**
+ * @param {{}} args : The cli arguments provided by user.
+ * @param {function} callback : A callback function that prints errors and ends execution of the command.
+ * @returns {void}
+ */
+export default function(args, callback) {
+    OAuth2.validateSessionToken(args.sessionToken, (err, user) => {
+        if (err) {
+            callback(err);
+        } else {
+            Object.assign(args, { ...user });
+        }
+    });
+}
+```
+
+### Example Usage:
+
+```
+// index.js
+
 ///////////////////////////////////////////////
 // Collect your dependencies and middlewares //
 ///////////////////////////////////////////////
 
 import vorpalDefault from 'vorpal';
-const vorpal = vorpalDefault();
-import getMiddlewarePipeline from "#src/frameworks/terminal/vorpal/util/getMiddlewarePipeline.js"; // your project structure will vary
+import { getMiddlewarePipeline } from "#lib/vorpal-middleware"; // Project directory structures will vary.
 import uncaughtExceptionMiddleware from "#src/frameworks/terminal/vorpal/middleware/uncaughtExceptionMiddleware.js";
 import authMiddleware from "#src/frameworks/terminal/vorpal/middleware/authMiddleware.js";
 import * as accountRoutes from '#src/frameworks/terminal/vorpal/routes/account.js';
+const vorpal = vorpalDefault();
 
 //////////////////////////////////////////////////////
 // Add your middlewares to the middleware pipeline: //
@@ -31,7 +65,7 @@ vorpal.command('create-account <firstName> <lastName> <username> <email> <passwo
     // has the ability to mutate or act on the args object/param //
     //                                                           //
     // @param {{}} this : A 'this' override provided by Vorpal.  //
-    // @param {{}} args : The cli arguments ptovided by user.    //
+    // @param {{}} args : The cli arguments provided by user.    //
     // @param {function} cb : A callback function that ends      //
     // execution of the command.                                 //
     // @param {function} action : The actual function to call    //
