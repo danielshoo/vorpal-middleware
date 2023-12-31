@@ -24,12 +24,14 @@ import OAuth2 from "#lib/oauth2";
  * @returns {void}
  */
 export default function(args, callback) {
-    OAuth2.validateSessionToken(args.sessionToken, (err, user) => {
-        if (err) {
-            callback(err);
-        } else {
-            Object.assign(args, { ...user });
-        }
+    return new Promise((resolve, reject) => {
+        OAuth2.validateSessionToken(args.sessionToken, (err, user) => {
+            if (err) {
+                callback(err) && reject(err);
+            } else {
+                Object.assign(args, { ...user }) && resolve();
+            }
+        });
     });
 }
 ```
@@ -44,9 +46,14 @@ export default function(args, callback) {
 ///////////////////////////////////////////////
 
 import vorpalDefault from 'vorpal';
-import { getVorpalMiddlewarePipeline } from "#lib/vorpal-middleware"; // Project directory structures will vary.
-import uncaughtExceptionMiddleware from "#src/frameworks/terminal/vorpal/middleware/uncaughtExceptionMiddleware.js";
-import authMiddleware from "#src/frameworks/terminal/vorpal/middleware/authMiddleware.js";
+import {
+    getVorpalMiddlewarePipeline,
+    uncaughtExceptionMiddleware,
+ } from "#src/frameworks/terminal/vorpal/vorpal-middleware.js";
+import {
+    authMiddleware,
+    employeeVpnCheckMiddleware,
+} from "#src/frameworks/terminal/vorpal/custom-client-middlewares/index.js";
 import * as accountRoutes from '#src/frameworks/terminal/vorpal/routes/account.js';
 const vorpal = vorpalDefault();
 
@@ -56,6 +63,7 @@ const vorpal = vorpalDefault();
 
 const middlewarePipeline = getMiddlewarePipeline();
 middlewarePipeline.push(uncaughtExceptionMiddleware);
+middlewarePipeline.pus(employeeVpnCheckMiddleware);
 middlewarePipeline.push(authMiddleware);
 
 vorpal.command('create-account <firstName> <lastName> <username> <email> <password>').action(function(args, cb) {
