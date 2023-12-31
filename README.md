@@ -4,6 +4,7 @@ A basic middleware pipeline supporting the Vorpal CLI package
 
 ## Example Usage:
 
+```
 // terminal.mjs (aka main.js or index.js)
 
 import vorpalDefault from 'vorpal';
@@ -26,3 +27,5 @@ vorpal.command('delete-account <password> [username] [email]').action(function(a
 });
 
 vorpal.delimiter('app-name').parse(process.argv);
+
+```
